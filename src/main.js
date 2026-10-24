@@ -14,14 +14,14 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#91cce8');
-scene.fog = new THREE.FogExp2('#b7dcec', 0.00135);
+scene.fog = new THREE.FogExp2('#c5e5f2', 0.00105);
 const camera = new THREE.PerspectiveCamera(64, innerWidth / innerHeight, 0.1, 1600);
 const hemi = new THREE.HemisphereLight(0xdaf4ff, 0x718d9b, 2.1); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff0c9, 3.0); sun.position.set(-85, 140, 60); sun.castShadow = true;
 sun.shadow.mapSize.set(1024,1024); sun.shadow.camera.left=-75; sun.shadow.camera.right=75; sun.shadow.camera.top=100; sun.shadow.camera.bottom=-100; sun.shadow.bias=-0.0003; scene.add(sun);
 const fill = new THREE.DirectionalLight(0x8cd9ff, 1.0); fill.position.set(90, 50, -90); scene.add(fill);
 const mat = (color, roughness=.9, extra={}) => new THREE.MeshStandardMaterial({color, roughness, ...extra});
-const snowColors = [new THREE.Color('#f7fcff'),new THREE.Color('#e7f5fb'),new THREE.Color('#d6eaf5'),new THREE.Color('#c5dfed')];
+const snowColors = [new THREE.Color('#fbfdff'),new THREE.Color('#eaf6fc'),new THREE.Color('#d8eaf5'),new THREE.Color('#c3deed')];
 const pineMaterials = [mat('#1d5864'),mat('#287582'),mat('#3d8d94'),mat('#174653')];
 const trunkMat = mat('#725c4d');
 const boardMat = mat('#142e45',.3,{metalness:.2});
@@ -37,10 +37,12 @@ const rand = (a,b)=>a+Math.random()*(b-a);
 // Rolling, readable arcade terrain with vertex-tinted snow facets.
 function terrainHeight(x,z){
   const descent = .105*z + .000035*z*z;
-  const broad = 2.2*Math.sin(z*.013 + x*.009) + 1.15*Math.sin(x*.028-z*.018);
-  const rollers = .75*Math.sin(z*.055+x*.017) + .35*Math.sin(z*.12-x*.04);
-  const sideRidges = 3.5*Math.exp(-Math.pow((Math.abs(x)-39)/13,2))*(.4+Math.sin(z*.012+1.4));
-  return descent+broad+rollers+sideRidges;
+  const broad = 3.6*Math.sin(z*.013 + x*.009) + 1.9*Math.sin(x*.028-z*.018);
+  const rollers = 1.25*Math.sin(z*.055+x*.017) + .62*Math.sin(z*.12-x*.04);
+  const sideRidges = 4.8*Math.exp(-Math.pow((Math.abs(x)-37)/11,2))*(.45+Math.sin(z*.012+1.4));
+  // Long, rounded terrain waves give the run a more readable downhill rhythm.
+  const wave = 2.1*Math.exp(-Math.pow((z+115)/24,2)) + 2.8*Math.exp(-Math.pow((z+315)/30,2)) + 2.3*Math.exp(-Math.pow((z+555)/27,2));
+  return descent+broad+rollers+sideRidges+wave;
 }
 function slopeAt(x,z){const e=.4;return {dx:(terrainHeight(x+e,z)-terrainHeight(x-e,z))/(2*e),dz:(terrainHeight(x,z+e)-terrainHeight(x,z-e))/(2*e)};}
 function terrainNormal(x,z){const s=slopeAt(x,z);return new THREE.Vector3(-s.dx,1,-s.dz).normalize();}
@@ -61,7 +63,7 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(1200,32,18),new THREE.ShaderMa
 function peak(x,z,h,r,color){const m=new THREE.Mesh(new THREE.ConeGeometry(r,h,7,1),mat(color,1,{flatShading:true}));m.position.set(x,terrainHeight(x,z)+h*.45,z);m.rotation.y=rand(0,6);m.castShadow=true;scene.add(m);const cap=new THREE.Mesh(new THREE.ConeGeometry(r*.63,h*.38,7,1),mat('#f2fbff',1,{flatShading:true}));cap.position.set(x,m.position.y+h*.28,z);cap.rotation.y=m.rotation.y;scene.add(cap);}
 for(let i=0;i<46;i++){const side=i%2?1:-1;peak(side*rand(90,310),rand(-780,90),rand(55,150),rand(25,65),i%3?'#83b4cc':'#9dc8d9');}
 // Low-cost instanced firs, clustered on both sides of the playable line.
-const treeCount=1250, dummy=new THREE.Object3D(), treeGroup=new THREE.Group();
+const treeCount=1750, dummy=new THREE.Object3D(), treeGroup=new THREE.Group();
 const trunkGeo=new THREE.CylinderGeometry(.13,.22,1.65,5), coneGeos=[new THREE.ConeGeometry(.85,1.65,6),new THREE.ConeGeometry(.68,1.5,6),new THREE.ConeGeometry(.5,1.35,6)];
 const instanced=[];
 for(const [g,m] of [[trunkGeo,trunkMat],[coneGeos[0],pineMaterials[0]],[coneGeos[1],pineMaterials[1]],[coneGeos[2],pineMaterials[2]]]){const im=new THREE.InstancedMesh(g,m,treeCount);im.castShadow=false;im.receiveShadow=true;treeGroup.add(im);instanced.push(im);}
@@ -132,6 +134,6 @@ function updatePhysics(dt){if(state.paused)return;if(state.crashed){state.crashT
   updateHud();if(state.distance>790){toast('RUN COMPLETE');state.score+=500;state.z=155;state.distance=0;state.x=0;state.vx=0;state.vz=-2.2;state.heading=0;}
 }
 function updateHud(){const speed=Math.round(Math.hypot(state.vx,state.vz)*3.6);$('#speed').textContent=String(speed).padStart(2,'0');$('#speedbar').style.width=Math.min(100,speed/100*100)+'%';$('#distance').textContent=`${Math.round(state.distance)} M DOWN`;$('#progress').style.width=Math.min(100,state.distance/790*100)+'%';$('#score').textContent=String(state.score).padStart(5,'0');if(!state.crashed)$('#status').textContent=state.airborne?'AIRBORNE':speed<4?'FIND YOUR LINE':pressed('s','arrowdown','brake')?'CHECKING SPEED':state.carve>8?'CARVING':'FULL SEND';}
-const camPos=new THREE.Vector3(),camLook=new THREE.Vector3(),forward=new THREE.Vector3();function updateCamera(dt){const speed=Math.hypot(state.vx,state.vz);forward.set(Math.sin(state.heading),0,-Math.cos(state.heading));const back=9.5+Math.min(speed*.2,5.5);const desired=new THREE.Vector3(state.x-forward.x*back,terrainHeight(state.x,state.z)+4.4+Math.min(speed*.055,2.5)+state.airY*.45,state.z-forward.z*back);camPos.copy(desired);camera.position.lerp(camPos,1-Math.exp(-3.5*dt));camLook.set(state.x+forward.x*(5+speed*.12),terrainHeight(state.x,state.z)+1.05+state.airY*.28,state.z+forward.z*(5+speed*.12));camera.lookAt(camLook);camera.fov=THREE.MathUtils.damp(camera.fov,64+Math.min(speed*.34,10),2.5,dt);camera.updateProjectionMatrix();sun.position.set(state.x-85,140,state.z+60);sun.target.position.set(state.x,0,state.z-25);}
+const camPos=new THREE.Vector3(),camLook=new THREE.Vector3(),forward=new THREE.Vector3();function updateCamera(dt){const speed=Math.hypot(state.vx,state.vz);forward.set(Math.sin(state.heading),0,-Math.cos(state.heading));const back=6.4+Math.min(speed*.105,2.8);const desired=new THREE.Vector3(state.x-forward.x*back,terrainHeight(state.x,state.z)+3.05+Math.min(speed*.035,1.25)+state.airY*.32,state.z-forward.z*back);camPos.copy(desired);camera.position.lerp(camPos,1-Math.exp(-5.2*dt));camLook.set(state.x+forward.x*(3.2+speed*.075),terrainHeight(state.x,state.z)+1.0+state.airY*.24,state.z+forward.z*(3.2+speed*.075));camera.lookAt(camLook);camera.fov=THREE.MathUtils.damp(camera.fov,68+Math.min(speed*.24,7),3.4,dt);camera.updateProjectionMatrix();sun.position.set(state.x-85,140,state.z+60);sun.target.position.set(state.x,0,state.z-25);}
 let last=performance.now(),acc=0;const fixed=1/120;function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.045);last=now;if(!state.paused){acc+=dt;while(acc>=fixed){updatePhysics(fixed);acc-=fixed;}}updateCamera(Math.max(dt,.001));renderer.render(scene,camera);}function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);}window.addEventListener('resize',resize);
 $('#loading').style.opacity='0';setTimeout(()=>{$('#loading')?.remove();$('#hud').classList.remove('hidden');},500);updateHud();requestAnimationFrame(frame);
