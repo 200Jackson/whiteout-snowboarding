@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#dce8ef" />
+    <title>Alpine Line — Snowboarding Prototype</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="loading">
+        <div class="loading-mark">A/L</div>
+        <div class="loading-title">ALPINE LINE</div>
+        <div class="loading-subtitle">PREPARING THE MOUNTAIN</div>
+      </div>
+      <canvas id="game"></canvas>
+      <div id="hud" class="hidden">
+        <div class="brand"><span class="brand-mark">A/L</span><span>ALPINE LINE<small>FREE RIDE PROTOTYPE</small></span></div>
+        <div class="conditions"><span class="live-dot"></span> HIGH ALPINE · FRESH SNOW</div>
+        <div class="speed-panel"><div class="eyebrow">GROUND SPEED</div><div class="speed"><span id="speed">0</span><small>KM/H</small></div><div class="speed-track"><span id="speedbar"></span></div><div class="speed-foot"><span>STILL</span><span>HIGH SPEED</span></div></div>
+        <div class="center-reticle"><span></span></div>
+        <div class="trick-toast" id="toast"></div>
+        <div class="bottom-left"><div class="eyebrow">RUN STATUS</div><div id="status">READY TO RIDE</div><div class="progress"><span id="progress"></span></div><div class="progress-label"><span>SUMMIT</span><span id="distance">0 M DOWN</span></div></div>
+        <div class="bottom-right"><div class="eyebrow">RIDE CONTROLS</div><div class="key-row"><kbd>A</kbd><kbd>D</kbd><span>CARVE</span></div><div class="key-row"><kbd>W</kbd><kbd>S</kbd><span>STANCE / BRAKE</span></div><div class="key-row"><kbd>SPACE</kbd><span>OLLIE / JUMP</span></div><div class="key-row"><kbd>Q</kbd><kbd>E</kbd><span>SPIN IN AIR</span></div><div class="key-row"><kbd>R</kbd><span>RESET RUN</span></div></div>
+        <div class="bottom-center">ALPINE LINE <span>·</span> MOUNTAIN SIMULATION / 01</div>
+        <button id="pause" aria-label="Pause game">Ⅱ</button>
+        <div id="pause-screen" class="hidden"><div class="pause-card"><div class="eyebrow">ALPINE LINE</div><h1>Take a breath.</h1><p>Your mountain will be here.</p><button id="resume">RESUME RIDE</button><button id="restart">RESTART RUN</button></div></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
